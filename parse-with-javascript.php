@@ -14,27 +14,33 @@
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnfdE7BKwMrZHgWcCyeDlCOCDzqNfG4mY&sensor=FALSE">//se puso en false por que no requiere la ubicación
     </script>
     <script type="text/javascript">
+    //https://developer.chrome.com/devtools/docs/javascript-debugging
 
-    //http://ecapy.com/variables-globales-en-javascript/
-      function initialize(mes,dia,hora,mesFin,diaFin,horaFin) {
+    var mapOptions;   
+	var map;
 
-      	var mapOptions = {
+	var primeraVez;
+	var coordInicial;
+	//creamos un array
+	var arrayLocations;
+	var colorRandom;
+	var Colors;
+
+	var flightPath;
+
+    function initialize () {
+    	Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
+
+    	mapOptions = {
           center: new google.maps.LatLng(19.43742763718538, -99.21005666265191),
           zoom: 18,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        
-		var map = new google.maps.Map(document.getElementById("map_canvas"),
+
+        map = new google.maps.Map(document.getElementById("map_canvas"),
             mapOptions);
 
-		Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
-
-		var primeraVez=0;
-		var coordInicial;
-		//creamos un array
-	    var arrayLocations = [];
-	    var colorRandom = 0;
-	    var Colors = [
+    	Colors = [
 		    "#FF0000", 
 		    "#00FF00", 
 		    "#0000FF", 
@@ -62,24 +68,42 @@
 		    "#FA8072"
 		];
 
+    	consultarRutas();
+    }
+
+    //http://ecapy.com/variables-globales-en-javascript/
+      function consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin) {
+
+      	primeraVez=0;
+      	arrayLocations = [];
+      	colorRandom = 0;
+		
 		//http://www.w3schools.com/jsref/jsref_utc.asp
 		//http://www.w3schools.com/jsref/jsref_obj_date.asp
 		// los ultimos 4 se pueden dejar en blanco
 		//new Date(year, month, day, hours, minutes, seconds, milliseconds) 
 
-		if (!mes || !dia || !hora || !mesFin || !diaFin || !horaFin) {
-			//alert("entro a null");
+		if (mes==null || dia==null || hora==null || mesFin==null || diaFin==null || horaFin==null) {
 			var dateToCompare = new Date(2014,9,8,6); // 5 horas menos para que respete la zona horaria prueba con 11:00
 			var dateToCompareFin = new Date(2014,9,8,7); // prueba con 12:00
-		}else{	
-			
-			var dateToCompare = new Date(2014,mes,dia,hora); // 5 horas menos para que respete la zona horaria prueba con 11:00
-			var dateToCompareFin = new Date(2014,mesFin,diaFin,horaFin); // prueba con 12:00
 
-			/*alert('mes='+mes+'-dia='+dia+'-hora='+hora);
+		}else{	
+			if ((hora >= 19 && hora <=23) || hora==0){
+				var dateToCompare = new Date(2014,mes,dia-1,hora);
+			}else{
+				var dateToCompare = new Date(2014,mes,dia,hora);
+			}
+
+			if ((horaFin >= 19 && horaFin <=23) || horaFin==0){
+				var dateToCompareFin = new Date(2014,mesFin,diaFin-1,horaFin);
+			}else{
+				var dateToCompareFin = new Date(2014,mesFin,diaFin,horaFin);
+			}
+
+			alert('mes='+mes+'-dia='+dia+'-hora='+hora);
 			alert("Date UTC = " + (dateToCompare).toUTCString());
 			alert('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
-			alert("DateFin UTC = " + (dateToCompareFin).toUTCString());*/
+			alert("DateFin UTC = " + (dateToCompareFin).toUTCString());
 		}
 
 		
@@ -153,7 +177,7 @@
 
 				    }
 			        
-					var flightPath = new google.maps.Polyline({
+					flightPath = new google.maps.Polyline({
 						    path: arrayLocations,
 						    geodesic: true,
 						    strokeColor: Colors[colorRandom],
@@ -272,7 +296,7 @@
     	 } 
 
     	 function buscarMapa (argument) {
-    	 	initialize(mes,dia,hora,mesFin,diaFin,horaFin);
+    	 	consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin);
     	 }
 
     </script>
