@@ -121,7 +121,7 @@
 		    alert("Hay " + resultsRutas.length + " rutas.");
 
 		    for (var numR in resultsRutas){
-				if (argument==null && (resultsRutas.length>0) && (resultsRutas.length-(listaRutasSelect.options.length+1)!=0) ) {
+				if (argument==null && (resultsRutas.length>0) && (resultsRutas.length-(listaRutasSelect.options.length)!=0) ) {
 					listaRutasSelect.options.add(new Option( resultsRutas[numR].get('NombreRuta') ));
 				}//metemos la ruta en un arreglo de rutas para despues meterlo a un select
 		      
