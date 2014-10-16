@@ -34,19 +34,25 @@
     var colorRandom;
     var Colors;
 
+    var startImage;
+
     var flightPath;
+
+    var messNombreRuta;
 
      function initialize () {
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
 
       mapOptions = {
           center: new google.maps.LatLng(19.43742763718538, -99.21005666265191),
-          zoom: 18,
+          zoom: 8,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
 
         map = new google.maps.Map(document.getElementById("map_canvas"),
             mapOptions);
+
+        startImage = 'images/start.png';
 
       Colors = [
         "#FF0000", 
@@ -108,17 +114,16 @@
         var dateToCompareFin = new Date(2014,mesFin,diaFin,horaFin);
       }
 
-      alert('mes='+mes+'-dia='+dia+'-hora='+hora);
-      alert("Date UTC = " + (dateToCompare).toUTCString());
-      alert('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
-      alert("DateFin UTC = " + (dateToCompareFin).toUTCString());
+      /*console.log('mes='+mes+'-dia='+dia+'-hora='+hora);
+      console.log("Date UTC = " + (dateToCompare).toUTCString());
+      console.log('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
+      console.log("DateFin UTC = " + (dateToCompareFin).toUTCString());*/
     }
 
     
 
     var Rutas = Parse.Object.extend("Rutas");
     var queryRutas = new Parse.Query(Rutas);
-    //queryRutas.equalTo("NombreRuta", "prueba al mercado version 6.0");
     queryRutas.notEqualTo("NombreRuta","SinNombre");
     queryRutas.ascending("createdAt");
     // si dateToCompare y dateToCompareFin se cambiaron
@@ -131,15 +136,15 @@
       
         alert("Hay " + resultsRutas.length + " rutas.");
 
-        var holaa = 1;
+        for (var numR = 0; numR < resultsRutas.length; numR++) {
+       // for (var numR in resultsRutas){
 
-        for (var numR in resultsRutas){
-          if (holaa == 1){
-          alert(numR + ' - ' + resultsRutas[numR].get('NombreRuta'));
-          //alert("dato devuelto => "+resultsRutas[numR].createdAt); //Parse 6:00
-          //alert("dato devuelto UTC => "+(resultsRutas[numR].createdAt).toUTCString()); //Parse UTC 11:00
-          holaa ++;
-        }
+          messNombreRuta = resultsRutas[numR].get('NombreRuta');
+
+          if (numR == 0){
+          console.log('1 vez '+numR + ' - ' + messNombreRuta);
+           // holaa ++;
+          }
           
           
           var Locations = Parse.Object.extend("Locations");
@@ -149,8 +154,7 @@
         queryLocations.limit(1000);
         queryLocations.find({
           success: function(resultsLocations) {
-            //alert("Hay " + resultsLocations.length + " Locations en la ruta: " + resultsRutas[numR].get('NombreRuta'));
-            
+           // alert("Hay " + resultsLocations.length + " Locations en la ruta: " + messNombreRuta);
 
             for (var numL in resultsLocations){
 
@@ -160,7 +164,7 @@
 
                 mapOptions = {
                     center: coordInicial,
-                    zoom: 18,
+                    zoom: 8,
                     mapTypeId: google.maps.MapTypeId.ROADMAP
                   };
 
@@ -169,14 +173,35 @@
 
                 primeraVez++;
               }
+
               if (numL==0) {
+
                 var marker = new google.maps.Marker({
                   position: new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude, 
                                     resultsLocations[numL].get('geoPoint').longitude),
                   map: map,
-                  title: 'Hello World!'
+                  icon: startImage,
+                  draggable: false,  // para mover el marker
+                  animation: google.maps.Animation.DROP
+                });
+
+                marker.setTitle((numR).toString());
+
+                attachSecretMessage(marker,messNombreRuta);
+              }
+
+              function attachSecretMessage(marker, message) {
+                
+                var infowindow = new google.maps.InfoWindow({
+                  content: message
+                });
+
+                google.maps.event.addListener(marker, 'click', function() {
+                  infowindow.open(marker.get('map'), marker);
                 });
               }
+
+
               
               arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
                                     resultsLocations[numL].get('geoPoint').longitude));

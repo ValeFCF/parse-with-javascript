@@ -19,12 +19,8 @@
       </script>
 
 
-
-
 <script type="text/javascript" >
     //https://developer.chrome.com/devtools/docs/javascript-debugging
-
-    var user;
 
     var mapOptions;   
     var map;
@@ -84,22 +80,7 @@
     listaRutasSelect = document.getElementById('listaRuta');
 
 
-
-        var query = new Parse.Query(Parse.User);
-    query.equalTo("objectId", "IPLz80QX1D");
-    query.find({
-      success: function(usuario) {
-        // Do stuff
-        for (var usuarioO in usuario){
-          user = usuario[usuarioO];
-        }
         consultarRutas();
-
-     },
-          error: function(error) {
-            alert("Error: " + error.code + " " + error.message);
-          }
-    });
       
     }
 
@@ -113,7 +94,8 @@
     
     var Rutas = Parse.Object.extend("Rutas");
     var queryRutas = new Parse.Query(Rutas);
-    queryRutas.equalTo("user",user);
+    //current User
+    queryRutas.equalTo("user",Parse.User.current());
     if (argument != null){
       queryRutas.equalTo("NombreRuta", argument);
     }else{
@@ -127,7 +109,7 @@
 
         alert("Hay " + resultsRutas.length + " rutas.");
 
-        for (var numR in resultsRutas){
+      for (var numR in resultsRutas){
         if (argument==null && (resultsRutas.length>0) && (resultsRutas.length-(listaRutasSelect.options.length)!=0) ) {
           listaRutasSelect.options.add(new Option( resultsRutas[numR].get('NombreRuta') ));
         }//metemos la ruta en un arreglo de rutas para despues meterlo a un select
@@ -204,7 +186,7 @@
 
     <script>
 
-      function changeDate () {
+      function changeRuta() {
         
         elemSelect = document.getElementById('listaRuta');
       valueSelect = elemSelect.options[elemSelect.selectedIndex].text;
@@ -215,6 +197,11 @@
       
        } 
 
+       function Logout () {
+         Parse.User.logOut();
+         window.location = ("Login.html"); 
+       }
+
     </script>
     </head>
 
@@ -222,7 +209,7 @@
 
 
   <form>
-        <select name="Ruta" id="listaRuta" onchange="changeDate()">
+        <select name="Ruta" id="listaRuta" onchange="changeRuta()">
         </select>
 
     </form>
@@ -231,6 +218,12 @@
         <input type="button" 
         onclick="consultarRutas()" 
         value="Ver todas las rutas...">
+    </form>
+
+     <form>
+        <input type="button" 
+        onclick="Logout()" 
+        value="Logout...">
     </form>
 
       <div id="map_canvas" style="width:100%; height:80%"></div>
