@@ -35,6 +35,7 @@
     var Colors;
 
     var startImage;
+    var endImage;
 
     var flightPath;
 
@@ -53,34 +54,35 @@
             mapOptions);
 
         startImage = 'images/start.png';
+        endImage = 'images/end.png';
 
-      Colors = [
-        "#FF0000", 
-        "#00FF00", 
-        "#0000FF", 
-        "#FFFFFF", 
-        "#000000", 
-        "#FFFF00", 
-        "#00FFFF", 
-        "#FF00FF",
-        "#7FFFD4", 
-        "#8A2BE2", 
-        "#A52A2A", 
-        "#5F9EA0", 
-        "#D2691E", 
-        "#6495ED", 
-        "#008B8B", 
-        "#B8860B",
-        "#8B008B", 
-        "#FF8C00", 
-        "#FF1493", 
-        "#ADFF2F", 
-        "#4B0082", 
-        "#90EE90", 
-        "#9370DB", 
-        "#FF4500",
-        "#FA8072"
-    ];
+        Colors = [
+          "#FF0000", 
+          "#00FF00", 
+          "#0000FF", 
+          "#FFFFFF", 
+          "#000000", 
+          "#FFFF00", 
+          "#00FFFF", 
+          "#FF00FF",
+          "#7FFFD4", 
+          "#8A2BE2", 
+          "#A52A2A", 
+          "#5F9EA0", 
+          "#D2691E", 
+          "#6495ED", 
+          "#008B8B", 
+          "#B8860B",
+          "#8B008B", 
+          "#FF8C00", 
+          "#FF1493", 
+          "#ADFF2F", 
+          "#4B0082", 
+          "#90EE90", 
+          "#9370DB", 
+          "#FF4500",
+          "#FA8072"
+      ];
 
       consultarRutas();
     }
@@ -91,7 +93,6 @@
       primeraVez=0;
       arrayLocations = [];
       colorRandom = 0;
-      distance = 0.0;
     
       //http://www.w3schools.com/jsref/jsref_utc.asp
       //http://www.w3schools.com/jsref/jsref_obj_date.asp
@@ -115,10 +116,10 @@
             var dateToCompareFin = new Date(2014,mesFin,diaFin,horaFin);
           }
 
-      /*console.log('mes='+mes+'-dia='+dia+'-hora='+hora);
-      console.log("Date UTC = " + (dateToCompare).toUTCString());
-      console.log('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
-      console.log("DateFin UTC = " + (dateToCompareFin).toUTCString());*/
+          /*console.log('mes='+mes+'-dia='+dia+'-hora='+hora);
+          console.log("Date UTC = " + (dateToCompare).toUTCString());
+          console.log('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
+          console.log("DateFin UTC = " + (dateToCompareFin).toUTCString());*/
       }
 
       var Rutas = Parse.Object.extend("Rutas");
@@ -151,6 +152,7 @@
                         
            //   console.log('From async.js => '+ruta + ' - ' + ruta.get('NombreRuta'));
 
+              distance = 0.0;
 
               var Locations = Parse.Object.extend("Locations");
               var queryLocations = new Parse.Query(Locations);
@@ -186,14 +188,27 @@
                       if (numL==0) {
 
                           addMarker(arrayLocations[numL],
+                                    startImage,
                                     ruta.get('NombreRuta'),
                                     '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+'</p>');
 
                       }// fin agregar markers
                       else if(numL==resultsLocations.length-1){
+
+                          //******************************************
+                          //******************************************
+                          //******************************************
+                          //   TENER CUIDADO POR EL WHILE
+                          //******************************************
+                          //******************************************
+                          //******************************************
+
+                          distance = (distance / 1000);
+                          
                           addMarker(arrayLocations[numL],
+                                    endImage,
                                     ruta.get('NombreRuta'),
-                                    '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance+'</p>');
+                                    '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)+' km.</p>');
                           
                       }else{
                         distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
@@ -241,13 +256,12 @@
 
           
           
-          function addMarker(pos,nomRuta,message) {
-
+          function addMarker(pos, image, nomRuta, message) {
 
             var marker = new google.maps.Marker({
                           position: pos,
                           map: map,
-                          icon: startImage,
+                          icon: image,
                           draggable: false,  // para mover el marker
                           animation: google.maps.Animation.DROP
                         });

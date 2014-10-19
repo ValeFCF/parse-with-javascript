@@ -14,8 +14,10 @@
     // Initialize Parse
     Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
 
+    var html = "queries-especifics.html";
+
     if (Parse.User.current()) {
-        window.location = ("consultas-especificas.html"); 
+        window.location = (html); 
     } 
 
     window.fbAsyncInit = function() {
@@ -45,7 +47,7 @@
    Parse.User.logIn(document.getElementById("NombreUser").value, document.getElementById("Pass").value, {
       success: function(user) {
         alert('Bienvenido ' + user.getUsername());
-        window.location = ("consultas-especificas.html"); 
+        window.location = (html); 
       },
       error: function(user, error) {
         // The login failed. Check error to see why.
@@ -66,7 +68,7 @@
             alert('Bienvenido ' + response.name);
           });
 
-          window.location = ("consultas-especificas.html"); 
+          window.location = (html); 
         }
       },
       error: function(user, error) {

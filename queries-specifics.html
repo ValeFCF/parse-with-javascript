@@ -1,0 +1,327 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>Rutas</title>
+
+  <script type="text/javascript" src="async.js"></script>
+  
+  <script src="http://www.parsecdn.com/js/parse-1.3.0.min.js"></script>
+
+
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+      <style type="text/css">
+        html { height: 100% }
+        body { height: 100%; margin: 0; padding: 0 }
+        #map_canvas { height: 100% }
+      </style>
+
+  <script type="text/javascript"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnfdE7BKwMrZHgWcCyeDlCOCDzqNfG4mY&libraries=geometry&sensor=FALSE">//se puso en false por que no requiere la ubicación
+      </script>
+
+
+<script type="text/javascript" >
+    //https://developer.chrome.com/devtools/docs/javascript-debugging
+
+    var mapOptions;   
+    var map;
+
+    var primeraVez;
+    //creamos un array
+    var arrayLocations;
+    var colorRandom;
+    var Colors;
+
+    var startImage;
+    var endImage;
+
+    var flightPath;
+
+    var distance;
+
+    var listaRutasSelect;
+
+    var userH;
+
+    function initialize() {
+
+      Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
+
+      mapOptions = {
+          center: new google.maps.LatLng(19.43742763718538, -99.21005666265191),
+          zoom: 18,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+
+        startImage = 'images/start.png';
+        endImage = 'images/end.png';
+
+        Colors = [
+          "#FF0000", 
+          "#00FF00", 
+          "#0000FF", 
+          "#FFFFFF", 
+          "#000000", 
+          "#FFFF00", 
+          "#00FFFF", 
+          "#FF00FF",
+          "#7FFFD4", 
+          "#8A2BE2", 
+          "#A52A2A", 
+          "#5F9EA0", 
+          "#D2691E", 
+          "#6495ED", 
+          "#008B8B", 
+          "#B8860B",
+          "#8B008B", 
+          "#FF8C00", 
+          "#FF1493", 
+          "#ADFF2F", 
+          "#4B0082", 
+          "#90EE90", 
+          "#9370DB", 
+          "#FF4500",
+          "#FA8072"
+    ];
+
+    listaRutasSelect = document.getElementById('listaRuta');
+
+
+
+
+
+        var query = new Parse.Query(Parse.User);
+         query.equalTo("objectId", "wEJPMAgdu5");
+         query.find({
+           success: function(usuario) {
+             // Do stuff
+             for (var usuarioO in usuario){
+               userH = usuario[usuarioO];
+             }
+             consultarRutas();
+
+            },
+               error: function(error) {
+                 alert("Error: " + error.code + " " + error.message);
+               }
+         });
+
+        
+      
+    }
+
+    //http://ecapy.com/variables-globales-en-javascript/
+    //https://developer.chrome.com/devtools
+      function consultarRutas(argument) {
+
+        primeraVez=0;
+        arrayLocations = [];
+        colorRandom = 0;
+    
+        var Rutas = Parse.Object.extend("Rutas");
+        var queryRutas = new Parse.Query(Rutas);
+        //current User
+        queryRutas.equalTo("user",userH/*Parse.User.current()*/);
+        if (argument != null){
+          queryRutas.equalTo("NombreRuta", argument);
+        }else{
+          queryRutas.notEqualTo("NombreRuta","SinNombre");
+          queryRutas.descending("createdAt");
+          queryRutas.limit(1000);
+        }
+    
+        queryRutas.find({
+          success: function(resultsRutas) {
+
+            console.log("Hay " + resultsRutas.length + " rutas.");
+
+            async.each(resultsRutas, function( ruta, callback) { // es lo mismo a for(var ruta in resultsRutas){}
+
+              distance = 0.0;
+
+              if (argument==null && (resultsRutas.length>0) && (resultsRutas.length-(listaRutasSelect.options.length-1)!=0) ) {
+
+                if (listaRutasSelect.options.length<1) {
+                  listaRutasSelect.options.add(new Option( "Todas las Rutas" ));
+                }
+
+                listaRutasSelect.options.add(new Option( ruta.get('NombreRuta') ));
+              }//metemos la ruta en un arreglo de rutas para despues meterlo a un select
+              
+              var Locations = Parse.Object.extend("Locations");
+              var queryLocations = new Parse.Query(Locations);
+              queryLocations.equalTo("ruta", ruta);
+              queryLocations.descending("numCoordenada");
+              queryLocations.limit(1000);
+              queryLocations.find({
+                success: function(resultsLocations) {
+                  
+                  for (var numL in resultsLocations){
+
+                    arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
+                                          resultsLocations[numL].get('geoPoint').longitude));
+
+                    if (numL==0 && primeraVez==0) {
+
+                      mapOptions = {
+                          center: arrayLocations[numL],
+                          zoom: 12,
+                          mapTypeId: google.maps.MapTypeId.ROADMAP
+                        };
+
+                        map = new google.maps.Map(document.getElementById("map_canvas"),
+                          mapOptions);
+
+                      primeraVez++;
+                    }
+                    if (numL==0) {
+                      addMarker(arrayLocations[numL],
+                                    startImage,
+                                    ruta.get('NombreRuta'),
+                                    '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+'</p>');
+
+                      }// fin agregar markers
+                      else if(numL==resultsLocations.length-1){
+                          //******************************************
+                          //******************************************
+                          //******************************************
+                          //   TENER CUIDADO POR EL WHILE
+                          //******************************************
+                          //******************************************
+                          //******************************************
+
+                          distance = (distance / 1000);
+
+                          addMarker(arrayLocations[numL],
+                                    endImage,
+                                    ruta.get('NombreRuta'),
+                                    '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)+' km.</p>');
+                          
+                      }else{
+                            distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+
+                          } // else para calcular distancia 
+
+                      } //Fin foreach Locations 
+              
+                  flightPath = new google.maps.Polyline({
+                        path: arrayLocations,
+                        geodesic: true,
+                        strokeColor: Colors[colorRandom],
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                      });
+                  
+
+                  flightPath.setMap(map);
+
+                  arrayLocations = [];
+                  colorRandom = Math.floor((Math.random() * 24) + 1);
+
+
+                },
+                error: function(error) {
+                  alert("Error: " + error.code + " " + error.message);
+                }
+              }); //fin query locations
+
+
+
+
+              // ERROR DEL CALLBACK DE async.js
+                 
+                         }, function(err){
+                // if any of the file processing produced an error, err would equal that error
+                if( err ) {
+                  // One of the iterations produced an error.
+                  // All processing will now stop.
+                  console.log('A file failed to process');
+                } else {
+                  console.log('All files have been processed successfully');
+                }
+            });//fin foreach Rutas con Async.js
+
+
+
+              function addMarker(pos, image, nomRuta, message) {
+
+                var marker = new google.maps.Marker({
+                              position: pos,
+                              map: map,
+                              icon: image,
+                              draggable: false,  // para mover el marker
+                              animation: google.maps.Animation.DROP
+                            });
+
+
+                marker.setTitle(nomRuta);
+
+                            
+                var infowindow = new google.maps.InfoWindow({
+                  content: message
+                });
+
+                google.maps.event.addListener(marker, 'click', function() {
+                  infowindow.open(marker.get('map'), marker);
+                });
+              }//fin addMarker
+
+
+              
+          },
+          error: function(error) {
+             alert("Error: " + error.code + " " + error.message);
+          }
+        });//fin query Rutas       
+
+      }
+
+    </script>
+
+    <script>
+
+      function changeRuta() {
+        
+        elemSelect = document.getElementById('listaRuta');
+        valueSelect = elemSelect.options[elemSelect.selectedIndex].text;
+
+        if (valueSelect == "Todas las Rutas"){
+          valueSelect = null;
+        }
+          
+        consultarRutas(valueSelect);
+      
+       } 
+
+       function Logout () {
+         Parse.User.logOut();
+         window.location = ("Login.html"); 
+       }
+
+    </script>
+    </head>
+
+<body onload="initialize()">
+
+
+  <form>
+        <select name="Ruta" id="listaRuta" onchange="changeRuta()">
+        </select>
+
+    </form>
+
+     <form>
+        <input type="button" 
+        onclick="Logout()" 
+        value="Logout...">
+    </form>
+
+      <div id="map_canvas" style="width:100%; height:80%"></div>
+
+  </body>
+
+</html>
