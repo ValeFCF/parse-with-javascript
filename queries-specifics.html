@@ -42,8 +42,6 @@
 
     var listaRutasSelect;
 
-    var userH;
-
     function initialize() {
 
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
@@ -88,29 +86,7 @@
           "#FA8072"
     ];
 
-    listaRutasSelect = document.getElementById('listaRuta');
-
-
-
-
-
-        var query = new Parse.Query(Parse.User);
-         query.equalTo("objectId", "wEJPMAgdu5");
-         query.find({
-           success: function(usuario) {
-             // Do stuff
-             for (var usuarioO in usuario){
-               userH = usuario[usuarioO];
-             }
-             consultarRutas();
-
-            },
-               error: function(error) {
-                 alert("Error: " + error.code + " " + error.message);
-               }
-         });
-
-        
+    listaRutasSelect = document.getElementById('listaRuta');        
       
     }
 
@@ -125,7 +101,7 @@
         var Rutas = Parse.Object.extend("Rutas");
         var queryRutas = new Parse.Query(Rutas);
         //current User
-        queryRutas.equalTo("user",userH/*Parse.User.current()*/);
+        queryRutas.equalTo("user",Parse.User.current());
         if (argument != null){
           queryRutas.equalTo("NombreRuta", argument);
         }else{
