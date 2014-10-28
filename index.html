@@ -40,6 +40,7 @@
     var flightPath;
 
     var distance;
+    var tiempoViajeSegundos;
 
      function initialize () {
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
@@ -153,6 +154,7 @@
            //   console.log('From async.js => '+ruta + ' - ' + ruta.get('NombreRuta'));
 
               distance = 0.0;
+              tiempoViajeSegundos = 0;
 
               var Locations = Parse.Object.extend("Locations");
               var queryLocations = new Parse.Query(Locations);
@@ -203,6 +205,11 @@
                           //******************************************
                           //******************************************
 
+
+                          console.log("tiempo: " + tiempoViajeSegundos);
+
+                          console.log("jajaja "+ tiempo(tiempoViajeSegundos) );
+
                           distance = (distance / 1000);
                           
                           addMarker(arrayLocations[numL],
@@ -212,6 +219,10 @@
                           
                       }else{
                         distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+
+                        tiempoViajeSegundos+=parseFloat( resultsLocations[numL].get('timpoViajeSegs') );
+
+                        
 
                       } // else para calcular distancia                      
                       
@@ -278,6 +289,29 @@
               infowindow.open(marker.get('map'), marker);
             });
           }//fin addMarker
+
+
+          function tiempo (segundosTotales) {
+            
+                    var strTiempo = "";
+                    var horas = 0;
+                    var minutos = 0;
+                    var segundos = 0;
+                    //Horas
+                    horas = parseInt(segundosTotales/3600);//1 hora tiene 3600 segundos
+                    minutos = parseInt( (segundosTotales-(horas * 3600)  ) /60 );//1 minuto tiene 60 segundos pero hay que considerar a las horas que ya hemos registrado
+                    segundos = parseInt( segundosTotales - (horas * 3600 + minutos * 60) );//Todo lo que hemos calculado el sobrante
+                    
+                    if(horas>0)
+                        strTiempo = strTiempo + horas + "h ";
+                    if((minutos==0 && horas>0) || minutos>0)
+                        strTiempo=strTiempo + minutos + "min ";
+
+                        strTiempo=strTiempo + segundos + "seg.";
+
+                    return strTiempo;
+                
+          }//fin tiempo
 
 
 
