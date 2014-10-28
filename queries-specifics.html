@@ -42,6 +42,8 @@
 
     var listaRutasSelect;
 
+ var userH;
+
     function initialize() {
 
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
@@ -86,8 +88,31 @@
           "#FA8072"
     ];
 
-    listaRutasSelect = document.getElementById('listaRuta');  
+//    listaRutasSelect = document.getElementById('listaRuta');  
 
+listaRutasSelect = document.getElementById('listaRuta');
+
+
+
+
+
+        var query = new Parse.Query(Parse.User);
+         query.equalTo("objectId", "wEJPMAgdu5");
+         query.find({
+           success: function(usuario) {
+             // Do stuff
+             for (var usuarioO in usuario){
+               userH = usuario[usuarioO];
+             }
+             consultarRutas();
+
+            },
+               error: function(error) {
+                 alert("Error: " + error.code + " " + error.message);
+               }
+         });
+
+        
     consultarRutas();      
       
     }
@@ -103,9 +128,11 @@
         var Rutas = Parse.Object.extend("Rutas");
         var queryRutas = new Parse.Query(Rutas);
         //current User
-        queryRutas.equalTo("user",Parse.User.current());
-        if (argument != null){
-          queryRutas.equalTo("NombreRuta", argument);
+        //queryRutas.equalTo("user",Parse.User.current());
+        queryRutas.equalTo("user",userH/*Parse.User.current()*/);
+        if (argument != null){  
+         queryRutas.equalTo("NombreRuta", argument);
+
         }else{
           queryRutas.notEqualTo("NombreRuta","SinNombre");
           queryRutas.descending("createdAt");
@@ -130,83 +157,113 @@
                 listaRutasSelect.options.add(new Option( ruta.get('NombreRuta') ));
               }//metemos la ruta en un arreglo de rutas para despues meterlo a un select
               
-              var Locations = Parse.Object.extend("Locations");
-              var queryLocations = new Parse.Query(Locations);
-              queryLocations.equalTo("ruta", ruta);
-              queryLocations.descending("numCoordenada");
-              queryLocations.limit(1000);
-              queryLocations.find({
-                success: function(resultsLocations) {
-                  
-                  for (var numL in resultsLocations){
 
-                    arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
-                                          resultsLocations[numL].get('geoPoint').longitude));
-
-                    if (numL==0 && primeraVez==0) {
-
-                      mapOptions = {
-                          center: arrayLocations[numL],
-                          zoom: 12,
-                          mapTypeId: google.maps.MapTypeId.ROADMAP
-                        };
-
-                        map = new google.maps.Map(document.getElementById("map_canvas"),
-                          mapOptions);
-
-                      primeraVez++;
-                    }
-                    if (numL==0) {
-                      addMarker(arrayLocations[numL],
-                                    startImage,
-                                    ruta.get('NombreRuta'),
-                                    '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+'</p>');
-
-                      }// fin agregar markers
-                      else if(numL==resultsLocations.length-1){
-                          //******************************************
-                          //******************************************
-                          //******************************************
-                          //   TENER CUIDADO POR EL WHILE
-                          //******************************************
-                          //******************************************
-                          //******************************************
-
-                          distance = (distance / 1000);
-
-                          addMarker(arrayLocations[numL],
-                                    endImage,
-                                    ruta.get('NombreRuta'),
-                                    '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)+' km.</p>');
+              //------------------
+              var tabla = Parse.Object.extend("Locations");
+              var queryCount = new Parse.Query(tabla);
+              var puntosAConsultarEnElWhile = 0;
+              queryCount.equalTo("ruta", ruta);
+              queryCount.count({
+                  success: function(count) {
+                  //alert(count);
+                  var bolCalculandoRuta= true;
+                    while(bolCalculandoRuta)
+                    {
+                      var Locations = Parse.Object.extend("Locations");
+                      var queryLocations = new Parse.Query(Locations);
+                      queryLocations.equalTo("ruta", ruta);
+                      queryLocations.ascending("numCoordenada");
+                      queryLocations.limit(1000);
+                      queryLocations.skip(puntosAConsultarEnElWhile);
+                      queryLocations.find({
+                        success: function(resultsLocations) {
                           
-                      }else{
-                            distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+                          for (var numL in resultsLocations){
 
-                          } // else para calcular distancia 
+                            arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
+                                                  resultsLocations[numL].get('geoPoint').longitude));
 
-                      } //Fin foreach Locations 
-              
-                  flightPath = new google.maps.Polyline({
-                        path: arrayLocations,
-                        geodesic: true,
-                        strokeColor: Colors[colorRandom],
-                        strokeOpacity: 1.0,
-                        strokeWeight: 2
-                      });
+                            if (numL==0 && primeraVez==0) {
+
+                              mapOptions = {
+                                  center: arrayLocations[numL],
+                                  zoom: 12,
+                                  mapTypeId: google.maps.MapTypeId.ROADMAP
+                                };
+
+                                map = new google.maps.Map(document.getElementById("map_canvas"),
+                                  mapOptions);
+
+                              primeraVez++;
+                            }
+
+                            
+                            if (numL==0) {
+                              addMarker(arrayLocations[numL],
+                                            startImage,
+                                            ruta.get('NombreRuta'),
+                                            '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+'</p>');
+
+                              }// fin agregar markers
+                              else if(numL==resultsLocations.length-1){
+                                  //******************************************
+                                  //******************************************
+                                  //******************************************
+                                  //   TENER CUIDADO POR EL WHILE
+                                  //******************************************
+                                  //******************************************
+                                  //******************************************
+
+                                  distance = (distance / 1000);
+
+                                  addMarker(arrayLocations[numL],
+                                            endImage,
+                                            ruta.get('NombreRuta'),
+                                            '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)+' km.</p>');
+                                  
+                              }else{
+                                    distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+
+                                  } // else para calcular distancia 
+
+                              } //Fin foreach Locations 
+                      
+
+                          flightPath = new google.maps.Polyline({
+                                path: arrayLocations,
+                                geodesic: true,
+                                strokeColor: Colors[colorRandom],
+                                strokeOpacity: 1.0,
+                                strokeWeight: 2
+                              });
+                          
+
+                          flightPath.setMap(map);
+
+                          arrayLocations = [];
+                          colorRandom = Math.floor((Math.random() * 24) + 1);
+
+
+                        },
+                        error: function(error) {
+                          alert("Error: " + error.code + " " + error.message);
+                        }
+                        }); //fin query locations 
+                    
+                      puntosAConsultarEnElWhile+=1000;
+                      
+                      if(puntosAConsultarEnElWhile>count || puntosAConsultarEnElWhile>10000)
+                          bolCalculandoRuta=false;
+                      
+                    }
+
                   
-
-                  flightPath.setMap(map);
-
-                  arrayLocations = [];
-                  colorRandom = Math.floor((Math.random() * 24) + 1);
-
-
-                },
+                
+                }, //Fin query para contar los puntos totales
                 error: function(error) {
-                  alert("Error: " + error.code + " " + error.message);
+                  // The request failed
                 }
-              }); //fin query locations
-
+              });
 
 
 
