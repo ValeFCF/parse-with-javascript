@@ -39,10 +39,10 @@
     var flightPath;
 
     var distance;
+    var tiempoViajeSegundos;
+    var puntosRecuperados=0;
 
     var listaRutasSelect;
-
- var userH;
 
     function initialize() {
 
@@ -88,30 +88,7 @@
           "#FA8072"
     ];
 
-//    listaRutasSelect = document.getElementById('listaRuta');  
-
-listaRutasSelect = document.getElementById('listaRuta');
-
-
-
-
-
-        var query = new Parse.Query(Parse.User);
-         query.equalTo("objectId", "wEJPMAgdu5");
-         query.find({
-           success: function(usuario) {
-             // Do stuff
-             for (var usuarioO in usuario){
-               userH = usuario[usuarioO];
-             }
-             consultarRutas();
-
-            },
-               error: function(error) {
-                 alert("Error: " + error.code + " " + error.message);
-               }
-         });
-
+    listaRutasSelect = document.getElementById('listaRuta');  
         
     consultarRutas();      
       
@@ -128,8 +105,7 @@ listaRutasSelect = document.getElementById('listaRuta');
         var Rutas = Parse.Object.extend("Rutas");
         var queryRutas = new Parse.Query(Rutas);
         //current User
-        //queryRutas.equalTo("user",Parse.User.current());
-        queryRutas.equalTo("user",userH/*Parse.User.current()*/);
+        queryRutas.equalTo("user",Parse.User.current());
         if (argument != null){  
          queryRutas.equalTo("NombreRuta", argument);
 
@@ -147,6 +123,7 @@ listaRutasSelect = document.getElementById('listaRuta');
             async.each(resultsRutas, function( ruta, callback) { // es lo mismo a for(var ruta in resultsRutas){}
 
               distance = 0.0;
+              tiempoViajeSegundos = 0;
 
               if (argument==null && (resultsRutas.length>0) && (resultsRutas.length-(listaRutasSelect.options.length-1)!=0) ) {
 
@@ -164,8 +141,8 @@ listaRutasSelect = document.getElementById('listaRuta');
               var puntosAConsultarEnElWhile = 0;
               queryCount.equalTo("ruta", ruta);
               queryCount.count({
-                  success: function(count) {
-                  //alert(count);
+                  success: function(countLocations) {
+                 // console.log(countLocations);
                   var bolCalculandoRuta= true;
                     while(bolCalculandoRuta)
                     {
@@ -183,65 +160,42 @@ listaRutasSelect = document.getElementById('listaRuta');
                             arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
                                                   resultsLocations[numL].get('geoPoint').longitude));
 
+                            tiempoViajeSegundos+=parseFloat( resultsLocations[numL].get('timpoViajeSegs') );
+
+                            if (numL > 0){
+                              distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+                            }
+
                             if (numL==0 && primeraVez==0) {
 
                               mapOptions = {
-                                  center: arrayLocations[numL],
-                                  zoom: 12,
-                                  mapTypeId: google.maps.MapTypeId.ROADMAP
-                                };
+                                    center: arrayLocations[numL],
+                                    zoom: 8,
+                                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                                  };
 
-                                map = new google.maps.Map(document.getElementById("map_canvas"),
-                                  mapOptions);
+                                  map = new google.maps.Map(document.getElementById("map_canvas"),
+                                    mapOptions);
 
-                              primeraVez++;
-                            }
-
+                                primeraVez++;
+                              }// fin primera vez
                             
-                            if (numL==0) {
-                              addMarker(arrayLocations[numL],
-                                            startImage,
-                                            ruta.get('NombreRuta'),
-                                            '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+'</p>');
 
-                              }// fin agregar markers
-                              else if(numL==resultsLocations.length-1){
-                                  //******************************************
-                                  //******************************************
-                                  //******************************************
-                                  //   TENER CUIDADO POR EL WHILE
-                                  //******************************************
-                                  //******************************************
-                                  //******************************************
+                          } //Fin foreach Locations 
 
-                                  distance = (distance / 1000);
+                              
+                          //Si ya no hay mas puntos que meterle al diccionario
+                          puntosRecuperados+=resultsLocations.length;
+                          //console.log("p recuperados= "+puntosRecuperados+"countLocations= "+countLocations);
+                          var max=countLocations;
+                          if(max>=11000)
+                              max=11000;
+                          if(puntosRecuperados>=max )
+                          {
+                              //Pintar ruta, calcular distancia en metros y tiempo
+                              pintarRuta();
+                          }
 
-                                  addMarker(arrayLocations[numL],
-                                            endImage,
-                                            ruta.get('NombreRuta'),
-                                            '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)+' km.</p>');
-                                  
-                              }else{
-                                    distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
-
-                                  } // else para calcular distancia 
-
-                              } //Fin foreach Locations 
-                      
-
-                          flightPath = new google.maps.Polyline({
-                                path: arrayLocations,
-                                geodesic: true,
-                                strokeColor: Colors[colorRandom],
-                                strokeOpacity: 1.0,
-                                strokeWeight: 2
-                              });
-                          
-
-                          flightPath.setMap(map);
-
-                          arrayLocations = [];
-                          colorRandom = Math.floor((Math.random() * 24) + 1);
 
 
                         },
@@ -252,11 +206,46 @@ listaRutasSelect = document.getElementById('listaRuta');
                     
                       puntosAConsultarEnElWhile+=1000;
                       
-                      if(puntosAConsultarEnElWhile>count || puntosAConsultarEnElWhile>10000)
+                      if(puntosAConsultarEnElWhile>countLocations || puntosAConsultarEnElWhile>10000)
                           bolCalculandoRuta=false;
+                          
                       
-                    }
+                    }// Fin WHILE
 
+                    function pintarRuta () {
+
+                         distance = (distance / 1000);
+                          //Marker inicio
+                          addMarker(arrayLocations[0],
+                                    startImage,
+                                    ruta.get('NombreRuta'),
+                                    '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)
+                                                  +' km, Velocidad: '+ velocidad(tiempoViajeSegundos,distance) +'</p>');
+
+                          //Marker final
+                          addMarker(arrayLocations[countLocations-1],
+                          endImage,
+                          ruta.get('NombreRuta'),
+                          '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+ tiempo(tiempoViajeSegundos) +'</p>');
+
+
+                          //Pintar polyline
+                          flightPath = new google.maps.Polyline({
+                                path: arrayLocations,
+                                geodesic: true,
+                                strokeColor: Colors[colorRandom],
+                                strokeOpacity: 1.0,
+                                strokeWeight: 2
+                              });
+                          
+                          flightPath.setMap(map);
+
+                          arrayLocations = [];
+                          distance = 0.0;
+                          tiempoViajeSegundos = 0;
+                          puntosRecuperados=0;
+                          colorRandom = Math.floor((Math.random() * 24) + 1);
+                    }// Fin pintar rutas
                   
                 
                 }, //Fin query para contar los puntos totales
@@ -265,10 +254,7 @@ listaRutasSelect = document.getElementById('listaRuta');
                 }
               });
 
-
-
-              // ERROR DEL CALLBACK DE async.js
-                 
+              // ERROR DEL CALLBACK DE async.js                
                          }, function(err){
                 // if any of the file processing produced an error, err would equal that error
                 if( err ) {
@@ -304,6 +290,46 @@ listaRutasSelect = document.getElementById('listaRuta');
                   infowindow.open(marker.get('map'), marker);
                 });
               }//fin addMarker
+
+               function tiempo (segundosTotales) {
+            
+                    var strTiempo = "";
+                    var horas = 0;
+                    var minutos = 0;
+                    var segundos = 0;
+                    //Horas
+                    horas = parseInt(segundosTotales/3600);//1 hora tiene 3600 segundos
+                    minutos = parseInt( (segundosTotales-(horas * 3600)  ) /60 );//1 minuto tiene 60 segundos pero hay que considerar a las horas que ya hemos registrado
+                    segundos = parseInt( segundosTotales - (horas * 3600 + minutos * 60) );//Todo lo que hemos calculado el sobrante
+                    
+                    if(horas>0)
+                        strTiempo = strTiempo + horas + "h ";
+                    if((minutos==0 && horas>0) || minutos>0)
+                        strTiempo=strTiempo + minutos + "min ";
+
+                        strTiempo=strTiempo + segundos + "seg.";                        
+
+                    return strTiempo;
+                
+                }//fin tiempo
+
+                function velocidad (segundosTotales, distanciaTotal) {
+
+                        var strVelocidad = "";
+                        //obtener el tiempo en horas
+                        var tiempo = segundosTotales/3600;
+
+                        if(tiempo>0)
+                        {
+                            var velocidad = distanciaTotal/tiempo;
+                            
+                            strVelocidad = velocidad.toFixed(2) + 'km/h.';
+                        }
+                        else
+                            strVelocidad = "0.0 km/h";
+
+                        return strVelocidad;
+                }//fin velocidad
 
 
               
