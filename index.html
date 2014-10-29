@@ -43,6 +43,8 @@
     var tiempoViajeSegundos;
     var puntosRecuperados=0;
 
+    var arrayUsers;
+
      function initialize () {
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
 
@@ -95,6 +97,7 @@
       primeraVez=0;
       arrayLocations = [];
       colorRandom = 0;
+      arrayUsers = [];
     
       //http://www.w3schools.com/jsref/jsref_utc.asp
       //http://www.w3schools.com/jsref/jsref_obj_date.asp
@@ -149,7 +152,17 @@
 
           async.each(resultsRutas, function( ruta, callback) { // es lo mismo a for(var ruta in resultsRutas){}
                         
-           //   console.log('From async.js => '+ruta + ' - ' + ruta.get('NombreRuta'));
+              //console.log('From async.js => '+ruta + ' - ' + ruta.get('NombreRuta') + ' - User: '+ ruta.get('user').id);
+
+              //Numero de usuarios
+              if (arrayUsers.indexOf( ruta.get('user').id ) == -1){
+                console.log("no contiene el user");
+                arrayUsers.push( ruta.get('user').id );
+              }else{
+                console.log("contiene el user");
+                
+              }           
+
 
             distance = 0.0;
             tiempoViajeSegundos = 0;
@@ -285,7 +298,9 @@
                 }
             });//fin foreach Rutas con Async.js
 
-          
+          //Pone cuantos usuarios distintos hay
+          document.getElementById("noUsers").innerHTML = "Número de usuarios: "+arrayUsers.length;
+
           
           function addMarker(pos, image, nomRuta, message) {
 
@@ -594,6 +609,9 @@
       <input type="button" 
       onclick="buscarMapa()" 
       value="Buscar...">
+  </form>
+  <form>
+    <label id="noUsers">Número de usuarios: </label>
   </form>
 
 
