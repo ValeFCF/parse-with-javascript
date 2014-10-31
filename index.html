@@ -187,11 +187,7 @@
 
              //Numero de usuarios
              if (arrayUsers.indexOf( ruta.get('user').id ) == -1){
-               console.log("no contiene el user");
                 arrayUsers.push( ruta.get('user').id );
-             }else{
-               console.log("contiene el user");
-                
              }           
 
 
@@ -217,15 +213,12 @@
                           queryLocations.skip(puntosAConsultarEnElWhile);
                           queryLocations.find({
                               success: function(resultsLocations) {
-                                  console.log("Hay " + resultsLocations.length + " Locations en la ruta: " + ruta.get('NombreRuta') + "." );
+                                //  console.log("Hay " + resultsLocations.length + " Locations en la ruta: " + ruta.get('NombreRuta') + "." );
                                 
 
                                 for (var numL in resultsLocations){
-
                                   
-                                  transporte = resultsLocations[numL].get('transporte');
-
-                                  switch (transporte) {
+                                  switch (resultsLocations[numL].get('transporte')) {
                                       case "Bicicleta":
                                           Bicicleta++;
                                           break;
@@ -340,11 +333,6 @@
                               distancePromedio += distance;
                               tiempoViajeSegundosPromedio += tiempoViajeSegundos;
 
-                              arrayLocations = [];
-                              distance = 0.0;
-                              tiempoViajeSegundos = 0;
-                              puntosRecuperados=0;
-                              colorRandom = Math.floor((Math.random() * 24) + 1);
 
                               //Pone los promedios Vel,Dist,Tiempo
                               noRutas++;
@@ -355,21 +343,45 @@
                                 document.getElementById("velocidad").innerHTML = velocidad(tiempoViajeSegundosPromedio/noRutas,
                                                                                             distancePromedio/noRutas);
 
-                               // if (true) {
+                                 //saber que transporte es más usador
+                                  var arrayTransporte = [Bicicleta,pie,Automovil,Autobus,Motocicleta,Metro,Metrobus];
+                                  var arrayTransporteTemporal = [Bicicleta,pie,Automovil,Autobus,Motocicleta,Metro,Metrobus];
+                                  var arrayTransporteFinal = ["Bicicleta","A pié","Automóvil","Autobús","Motocicleta","Metro","Metrobús"];
+
+                                  function bubbleSort(a)
+                                  {
+                                      var swapped;
+                                      do {
+                                          swapped = false;
+                                          for (var i=0; i < a.length-1; i++) {
+                                              if (a[i] > a[i+1]) {
+                                                  var temp = a[i];
+                                                  a[i] = a[i+1];
+                                                  a[i+1] = temp;
+                                                  swapped = true;
+                                              }
+                                          }
+                                      } while (swapped);
+                                  }
+ 
+                                  bubbleSort(arrayTransporteTemporal);
+
+                                  for (var i = 0; i < arrayTransporte.length; i++) {
+                                    if (arrayTransporteTemporal[arrayTransporteTemporal.length-1]==arrayTransporte[i]) {
+                                        transporte = arrayTransporteFinal[i];
+                                    }
+                                  }
+
                                   document.getElementById("transporte").innerHTML = transporte;
-                              //  };
-
-                                /*Bicicleta = 0;
-                                  pie = 0;
-                                  Automovil = 0;
-                                  Autobus = 0;
-                                  Motocicleta = 0;
-                                  Metro = 0;
-                                  Metrobus = 0;*/
-
-
                                 
                               }//fin poner Promedio de Vel,Dist,Tiempo
+
+
+                              arrayLocations = [];
+                              distance = 0.0;
+                              tiempoViajeSegundos = 0;
+                              puntosRecuperados=0;
+                              colorRandom = Math.floor((Math.random() * 24) + 1);
 
 
                         }// Fin pintar rutas  
