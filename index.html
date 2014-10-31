@@ -44,6 +44,18 @@
     var puntosRecuperados=0;
 
     var arrayUsers;
+    var transporte;
+    var Bicicleta;
+    var pie;
+    var Automovil;
+    var Autobus;
+    var Motocicleta;
+    var Metro;
+    var Metrobus;
+
+    var tiempoViajeSegundosPromedio;
+    var distancePromedio;
+    var noRutas;
 
      function initialize () {
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
@@ -98,6 +110,25 @@
       arrayLocations = [];
       colorRandom = 0;
       arrayUsers = [];
+
+      distancePromedio = 0;
+      tiempoViajeSegundosPromedio = 0;
+      noRutas = 0;
+
+      
+      transporte = "";
+      Bicicleta = 0;
+      pie = 0;
+      Automovil = 0;
+      Autobus = 0;
+      Motocicleta = 0;
+      Metro = 0;
+      Metrobus = 0;
+
+
+      document.getElementById("tiempo").innerHTML = "0"; 
+      document.getElementById("distancia").innerHTML = "0";
+      document.getElementById("velocidad").innerHTML = "0";
     
       //http://www.w3schools.com/jsref/jsref_utc.asp
       //http://www.w3schools.com/jsref/jsref_obj_date.asp
@@ -154,14 +185,14 @@
                         
               //console.log('From async.js => '+ruta + ' - ' + ruta.get('NombreRuta') + ' - User: '+ ruta.get('user').id);
 
-              //Numero de usuarios
-              if (arrayUsers.indexOf( ruta.get('user').id ) == -1){
-                console.log("no contiene el user");
+             //Numero de usuarios
+             if (arrayUsers.indexOf( ruta.get('user').id ) == -1){
+               console.log("no contiene el user");
                 arrayUsers.push( ruta.get('user').id );
-              }else{
-                console.log("contiene el user");
+             }else{
+               console.log("contiene el user");
                 
-              }           
+             }           
 
 
             distance = 0.0;
@@ -190,6 +221,37 @@
                                 
 
                                 for (var numL in resultsLocations){
+
+                                  
+                                  transporte = resultsLocations[numL].get('transporte');
+
+                                  switch (transporte) {
+                                      case "Bicicleta":
+                                          Bicicleta++;
+                                          break;
+                                      case "A pié":
+                                          pie++;
+                                          break;
+                                      case "Automóvil":
+                                          Automovil++;
+                                          break;
+                                      case "Autobús":
+                                          Autobus++;
+                                          break;
+                                      case "Motocicleta":
+                                          Motocicleta++;
+                                          break;
+                                      case "Metro":
+                                          Metro++;
+                                          break;
+                                      case "Metrobús":
+                                          Metrobus++;
+                                          break;
+                                      default:
+                                          break;
+                                  }
+
+
 
                                   //agregamos el geopoint a un array
                                   arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
@@ -273,12 +335,46 @@
                               
                               flightPath.setMap(map);
 
+
+                              //Promedios
+                              distancePromedio += distance;
+                              tiempoViajeSegundosPromedio += tiempoViajeSegundos;
+
                               arrayLocations = [];
                               distance = 0.0;
                               tiempoViajeSegundos = 0;
                               puntosRecuperados=0;
                               colorRandom = Math.floor((Math.random() * 24) + 1);
-                        }// Fin pintar rutas   
+
+                              //Pone los promedios Vel,Dist,Tiempo
+                              noRutas++;
+                              if (noRutas == resultsRutas.length) {
+                                
+                                document.getElementById("tiempo").innerHTML = tiempo(tiempoViajeSegundosPromedio/noRutas); 
+                                document.getElementById("distancia").innerHTML = (distancePromedio/noRutas).toFixed(2) + " km.";
+                                document.getElementById("velocidad").innerHTML = velocidad(tiempoViajeSegundosPromedio/noRutas,
+                                                                                            distancePromedio/noRutas);
+
+                               // if (true) {
+                                  document.getElementById("transporte").innerHTML = transporte;
+                              //  };
+
+                                /*Bicicleta = 0;
+                                  pie = 0;
+                                  Automovil = 0;
+                                  Autobus = 0;
+                                  Motocicleta = 0;
+                                  Metro = 0;
+                                  Metrobus = 0;*/
+
+
+                                
+                              }//fin poner Promedio de Vel,Dist,Tiempo
+
+
+                        }// Fin pintar rutas  
+
+
 
                     }, //Fin query para contar los puntos totales
                   error: function(error) {
@@ -299,8 +395,8 @@
             });//fin foreach Rutas con Async.js
 
           //Pone cuantos usuarios distintos hay
-          document.getElementById("noUsers").innerHTML = "Número de usuarios: "+arrayUsers.length;
-
+          document.getElementById("noUsers").innerHTML = arrayUsers.length;
+          
           
           function addMarker(pos, image, nomRuta, message) {
 
@@ -323,6 +419,7 @@
             google.maps.event.addListener(marker, 'click', function() {
               infowindow.open(marker.get('map'), marker);
             });
+
           }//fin addMarker
 
           function tiempo (segundosTotales) {
@@ -364,15 +461,13 @@
 
                   return strVelocidad;
           }//fin velocidad
-
-
-
           
         },
         error: function(error) {
           alert("Error: " + error.code + " " + error.message);
         }
       });//fin query Rutas
+
 
     }
     </script>
@@ -391,73 +486,73 @@
       function changeDate (argument, args2) {
         
         elemSelect = document.getElementById(argument);
-      valueSelect = elemSelect.options[elemSelect.selectedIndex].value;
+        valueSelect = elemSelect.options[elemSelect.selectedIndex].value;
 
-      if (args2 == 2 || args2 == 5) {
-        
-        switch (parseInt(valueSelect)) {
-          case 0:
-                valueSelect = 19;
-                break;
-            case 1:
-                valueSelect = 20;
-                break;
-            case 2:
-                valueSelect = 21;
-                break;
-            case 3:
-                valueSelect = 22;
-                break;
-            case 4:
-                valueSelect = 23;
-                break;
-            case 5:
-                valueSelect = 0;
-                break;
-            case 6:
-            case 7:
-            case 8:
-            case 9:
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-            case 15:
-            case 16:
-            case 17:
-            case 18:
-            case 19:
-            case 20:
-            case 21:
-            case 22:
-            case 23:
-              valueSelect = (valueSelect-5);
-                break;
+        if (args2 == 2 || args2 == 5) {
+          
+          switch (parseInt(valueSelect)) {
+            case 0:
+                  valueSelect = 19;
+                  break;
+              case 1:
+                  valueSelect = 20;
+                  break;
+              case 2:
+                  valueSelect = 21;
+                  break;
+              case 3:
+                  valueSelect = 22;
+                  break;
+              case 4:
+                  valueSelect = 23;
+                  break;
+              case 5:
+                  valueSelect = 0;
+                  break;
+              case 6:
+              case 7:
+              case 8:
+              case 9:
+              case 10:
+              case 11:
+              case 12:
+              case 13:
+              case 14:
+              case 15:
+              case 16:
+              case 17:
+              case 18:
+              case 19:
+              case 20:
+              case 21:
+              case 22:
+              case 23:
+                valueSelect = (valueSelect-5);
+                  break;
+          }
+
         }
 
-      }
-
-      switch (args2) {
-          case 0:
-              mes = valueSelect;
-              break;
-          case 1:
-              dia = valueSelect;
-              break;
-          case 2:
-              hora = valueSelect;
-              break;
-          case 3:
-              mesFin = valueSelect;
-              break;
-          case 4:
-              diaFin = valueSelect;
-              break;
-          case 5:
-              horaFin = valueSelect;
-              break;
-      }
+        switch (args2) {
+            case 0:
+                mes = valueSelect;
+                break;
+            case 1:
+                dia = valueSelect;
+                break;
+            case 2:
+                hora = valueSelect;
+                break;
+            case 3:
+                mesFin = valueSelect;
+                break;
+            case 4:
+                diaFin = valueSelect;
+                break;
+            case 5:
+                horaFin = valueSelect;
+                break;
+          }
 
        } 
 
@@ -611,7 +706,11 @@
       value="Buscar...">
   </form>
   <form>
-    <label id="noUsers">Número de usuarios: </label>
+    <label>Número de usuarios: </label><label id="noUsers"></label></p>
+    <label>Tiempo promedio: </label><label id="tiempo"></label></p>
+    <label>Distancia promedio: </label><label id="distancia"></label></p>
+    <label>Velocidad promedio: </label><label id="velocidad"></label></p>
+    <label>Transporte más usado: </label><label id="transporte"></label>
   </form>
 
 
