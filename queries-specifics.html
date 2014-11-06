@@ -30,6 +30,8 @@
     var primeraVez;
     //creamos un array
     var arrayLocations;
+    var arrayLocationsFinal;
+
     var colorRandom;
     var Colors;
 
@@ -100,6 +102,7 @@
 
         primeraVez=0;
         arrayLocations = [];
+        arrayLocationsFinal = [];
         colorRandom = 0;
     
         var Rutas = Parse.Object.extend("Rutas");
@@ -157,19 +160,21 @@
                           
                           for (var numL in resultsLocations){
 
-                            arrayLocations.push(new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
-                                                  resultsLocations[numL].get('geoPoint').longitude));
+                            arrayLocations.push( { id: resultsLocations[numL].get('numCoordenada') , 
+                                    value: new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
+                                                  resultsLocations[numL].get('geoPoint').longitude) } );
+
 
                             tiempoViajeSegundos+=parseFloat( resultsLocations[numL].get('timpoViajeSegs') );
 
                             if (numL > 0){
-                              distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1], arrayLocations[numL]);
+                              distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1].value, arrayLocations[numL].value);
                             }
 
                             if (numL==0 && primeraVez==0) {
 
                               mapOptions = {
-                                    center: arrayLocations[numL],
+                                    center: arrayLocations[numL].value,
                                     zoom: 8,
                                     mapTypeId: google.maps.MapTypeId.ROADMAP
                                   };
@@ -193,7 +198,7 @@
                           if(puntosRecuperados>=max )
                           {
                               //Pintar ruta, calcular distancia en metros y tiempo
-                              pintarRuta();
+                              preRuta();
                           }
 
 
@@ -212,18 +217,37 @@
                       
                     }// Fin WHILE
 
+                    //acomodar los puntos
+                        function preRuta () {
+                          console.log("arrayLocations: "+ arrayLocations[0].value);
+
+                          arrayLocations.sort(function(a,b) {
+                              return a.id - b.id;
+                          });
+
+                          console.log("arrayLocations: "+ arrayLocations[0].value);
+
+                          for (var i = 0; i < arrayLocations.length; i++) {
+                            arrayLocationsFinal.push( arrayLocations[i].value );
+                            if (i >= arrayLocations.length-1) {
+                              pintarRuta ();
+                            }
+                          }
+                          
+                        }
+
                     function pintarRuta () {
 
                          distance = (distance / 1000);
                           //Marker inicio
-                          addMarker(arrayLocations[0],
+                          addMarker(arrayLocations[0].value,
                                     startImage,
                                     ruta.get('NombreRuta'),
                                     '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)
                                                   +' km, Velocidad: '+ velocidad(tiempoViajeSegundos,distance) +'</p>');
 
                           //Marker final
-                          addMarker(arrayLocations[countLocations-1],
+                          addMarker(arrayLocations[countLocations-1].value,
                           endImage,
                           ruta.get('NombreRuta'),
                           '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+ tiempo(tiempoViajeSegundos) +'</p>');
@@ -231,7 +255,7 @@
 
                           //Pintar polyline
                           flightPath = new google.maps.Polyline({
-                                path: arrayLocations,
+                                path: arrayLocationsFinal,
                                 geodesic: true,
                                 strokeColor: Colors[colorRandom],
                                 strokeOpacity: 1.0,
@@ -241,6 +265,7 @@
                           flightPath.setMap(map);
 
                           arrayLocations = [];
+                          arrayLocationsFinal = [];
                           distance = 0.0;
                           tiempoViajeSegundos = 0;
                           puntosRecuperados=0;
