@@ -32,7 +32,6 @@
 
     var primeraVez;
     //creamos un array
-    var arrayLocations;
     var arrayLocationsFinal;
 
     var colorRandom;
@@ -110,8 +109,7 @@
     //http://ecapy.com/variables-globales-en-javascript/
     function consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin) {
 
-      primeraVez=0;
-      arrayLocations = [];
+      primeraVez = 0;
       arrayLocationsFinal = [];
       colorRandom = 0;
       arrayUsers = [];
@@ -119,7 +117,6 @@
       distancePromedio = 0;
       tiempoViajeSegundosPromedio = 0;
       noRutas = 0;
-
       
       transporte = "";
       Bicicleta = 0;
@@ -175,6 +172,8 @@
       queryRutas.find({
         success: function(resultsRutas) {
 
+          noRutas = resultsRutas.length;
+
           console.log("Hay " + resultsRutas.length + " rutas.");
 
     // AQUI UTILIZAMOS EL MODULO ********* async.js *********** PARA HACER UN FOR EACH ASYNCRONO  
@@ -205,120 +204,129 @@
             queryCount.equalTo("ruta", ruta);
             queryCount.count({
                 success: function(countLocations) {
+
+                  if (countLocations > 0) {
+                    
                 // console.log(countLocations);
-                var bolCalculandoRuta= true;
 
-                  while(bolCalculandoRuta){              
+                  var bolCalculandoRuta = true;
+                  var arrayLocations = [];
 
-                          var Locations = Parse.Object.extend("Locations");
-                          var queryLocations = new Parse.Query(Locations);
-                          queryLocations.equalTo("ruta", ruta);
-                          queryLocations.ascending("numCoordenada");
-                          queryLocations.limit(1000);
-                          queryLocations.skip(puntosAConsultarEnElWhile);
-                          queryLocations.find({
-                              success: function(resultsLocations) {
-                                //  console.log("Hay " + resultsLocations.length + " Locations en la ruta: " + ruta.get('NombreRuta') + "." );
+                    while(bolCalculandoRuta){              
 
-                                for (var numL in resultsLocations){
-                                  
-                                  switch (resultsLocations[numL].get('transporte')) {
-                                      case "Bicicleta":
-                                          Bicicleta++;
-                                          break;
-                                      case "A pié":
-                                          pie++;
-                                          break;
-                                      case "Automóvil":
-                                          Automovil++;
-                                          break;
-                                      case "Autobús":
-                                          Autobus++;
-                                          break;
-                                      case "Motocicleta":
-                                          Motocicleta++;
-                                          break;
-                                      case "Metro":
-                                          Metro++;
-                                          break;
-                                      case "Metrobús":
-                                          Metrobus++;
-                                          break;
-                                      default:
-                                          break;
-                                  }
-
-                                  //agregamos el geopoint a un array
-                                  arrayLocations.push( { id: resultsLocations[numL].get('numCoordenada') , 
-                                    value: new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
-                                                  resultsLocations[numL].get('geoPoint').longitude) } );
-
-                                  tiempoViajeSegundos+=parseFloat( resultsLocations[numL].get('timpoViajeSegs') );
-
-                                  if (numL==0 && primeraVez==0) {
+                            var Locations = Parse.Object.extend("Locations");
+                            var queryLocations = new Parse.Query(Locations);
+                            queryLocations.equalTo("ruta", ruta);
+                            queryLocations.ascending("numCoordenada");
+                            queryLocations.limit(1000);
+                            queryLocations.skip(puntosAConsultarEnElWhile);
+                            queryLocations.find({
+                                success: function(resultsLocations) {
+                                  //  console.log("Hay " + resultsLocations.length + " Locations en la ruta: " + ruta.get('NombreRuta') + "." );
+                                  for (var numL in resultsLocations){
                                     
-                                    mapOptions = {
-                                        center: arrayLocations[numL].value,
-                                        zoom: 8,
-                                        mapTypeId: google.maps.MapTypeId.ROADMAP
-                                      };
+                                    switch (resultsLocations[numL].get('transporte')) {
+                                        case "Bicicleta":
+                                            Bicicleta++;
+                                            break;
+                                        case "A pié":
+                                            pie++;
+                                            break;
+                                        case "Automóvil":
+                                            Automovil++;
+                                            break;
+                                        case "Autobús":
+                                            Autobus++;
+                                            break;
+                                        case "Motocicleta":
+                                            Motocicleta++;
+                                            break;
+                                        case "Metro":
+                                            Metro++;
+                                            break;
+                                        case "Metrobús":
+                                            Metrobus++;
+                                            break;
+                                        default:
+                                            break;
+                                    }
 
-                                      map = new google.maps.Map(document.getElementById("map_canvas"),
-                                        mapOptions);
+                                    //agregamos el geopoint a un array
+                                    arrayLocations.push( { id: resultsLocations[numL].get('numCoordenada') , 
+                                      value: new google.maps.LatLng(resultsLocations[numL].get('geoPoint').latitude,
+                                                    resultsLocations[numL].get('geoPoint').longitude) } );
 
-                                    primeraVez++;
-                                  }// fin primera vez
+                                    tiempoViajeSegundos+=parseFloat( resultsLocations[numL].get('timpoViajeSegs') );
 
-                                  if (numL > 0) {
-                                     distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1].value, arrayLocations[numL].value);
-                                  }                    
+                                    if (numL==0 && primeraVez==0) {
+                                      
+                                      mapOptions = {
+                                          center: arrayLocations[numL].value,
+                                          zoom: 8,
+                                          mapTypeId: google.maps.MapTypeId.ROADMAP
+                                        };
+
+                                        map = new google.maps.Map(document.getElementById("map_canvas"),
+                                          mapOptions);
+
+                                      primeraVez++;
+                                    }// fin primera vez
+
+                                    if (numL > 0) {
+                                       distance += google.maps.geometry.spherical.computeDistanceBetween(arrayLocations[numL-1].value, arrayLocations[numL].value);
+                                    } 
+
+                                  }// fin foreach Locations
                                   
-
-                                }// fin foreach Locations
+                                  //Si ya no hay mas puntos que meterle al diccionario
+                                  puntosRecuperados+=resultsLocations.length;
+                                  //console.log("p recuperados= "+puntosRecuperados+"countLocations= "+countLocations);
+                                  var max=countLocations;
+                                  if(max>=11000)
+                                      max=11000;
+                                  if(puntosRecuperados>=max )
+                                  {
+                                      //Pintar ruta, calcular distancia en metros y tiempo
+                                      preRuta( arrayLocations );
+                                       arrayLocations = [];
+                                  }
                                 
-                                //Si ya no hay mas puntos que meterle al diccionario
-                                puntosRecuperados+=resultsLocations.length;
-                                //console.log("p recuperados= "+puntosRecuperados+"countLocations= "+countLocations);
-                                var max=countLocations;
-                                if(max>=11000)
-                                    max=11000;
-                                if(puntosRecuperados>=max )
-                                {
-                                    //Pintar ruta, calcular distancia en metros y tiempo
-                                    preRuta();
+                               
+                                },
+                                error: function(error) {
+                                  alert("Error: " + error.code + " " + error.message);
                                 }
-                              
-                             
-                              },
-                              error: function(error) {
-                                alert("Error: " + error.code + " " + error.message);
-                              }
-                          });//fin query  Locations
+                            });//fin query  Locations
 
-                        puntosAConsultarEnElWhile+=1000;
-                      
-                        if(puntosAConsultarEnElWhile>countLocations || puntosAConsultarEnElWhile>10000)
-                            bolCalculandoRuta=false;
-                            
+                          puntosAConsultarEnElWhile+=1000;
                         
-                        }// Fin WHILE
+                          if(puntosAConsultarEnElWhile>countLocations || puntosAConsultarEnElWhile>10000)
+                              bolCalculandoRuta=false;
+                              
+                          
+                          }// Fin WHILE
+
+                        }//Fin if counting
 
                         //acomodar los puntos
-                        function preRuta () {
-                          console.log("arrayLocations: "+ arrayLocations[0].value);
+                        function preRuta (coordenadasNuevas) {
 
-                          arrayLocations.sort(function(a,b) {
-                              return a.id - b.id;
-                          });
+                          //console.log("coordenadasNuevas: "+ coordenadasNuevas.length);
 
-                          console.log("arrayLocations: "+ arrayLocations[0].value);
+                          var coordenadas = [];
 
-                          for (var i = 0; i < arrayLocations.length; i++) {
-                            arrayLocationsFinal.push( arrayLocations[i].value );
-                            if (i >= arrayLocations.length-1) {
+                          coordenadas = coordenadasNuevas.sort(function(a,b) {
+                                            return a.id - b.id;
+                                        });
+
+                          for (var i = 0; i < coordenadas.length; i++) {
+                            arrayLocationsFinal.push( coordenadas[i].value );
+                            if (i >= coordenadas.length-1) {
                               pintarRuta ();
                             }
                           }
+
+                         // console.log("coordenadas: "+ coordenadas.length);
                           
                         }
 
@@ -326,14 +334,14 @@
 
                              distance = (distance / 1000);
                               //Marker inicio
-                              addMarker(arrayLocations[0].value,
+                              addMarker(arrayLocationsFinal[0],
                                         startImage,
                                         ruta.get('NombreRuta'),
                                         '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)
                                                       +' km, Velocidad: '+ velocidad(tiempoViajeSegundos,distance) +'</p>');
 
                               //Marker final
-                              addMarker(arrayLocations[countLocations-1].value,
+                              addMarker(arrayLocationsFinal[countLocations-1],
                               endImage,
                               ruta.get('NombreRuta'),
                               '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+ tiempo(tiempoViajeSegundos) +'</p>');
@@ -357,9 +365,6 @@
 
 
                               //Pone los promedios Vel,Dist,Tiempo
-                              noRutas++;
-                              if (noRutas == resultsRutas.length) {
-                                
                                 document.getElementById("tiempo").innerHTML = tiempo(tiempoViajeSegundosPromedio/noRutas); 
                                 document.getElementById("distancia").innerHTML = (distancePromedio/noRutas).toFixed(2) + " km.";
                                 document.getElementById("velocidad").innerHTML = velocidad(tiempoViajeSegundosPromedio/noRutas,
@@ -396,10 +401,8 @@
 
                                   document.getElementById("transporte").innerHTML = transporte;
                                 
-                              }//fin poner Promedio de Vel,Dist,Tiempo
+                              //fin poner Promedio de Vel,Dist,Tiempo
 
-
-                              arrayLocations = [];
                               arrayLocationsFinal = [];
                               distance = 0.0;
                               tiempoViajeSegundos = 0;
@@ -414,6 +417,7 @@
                     }, //Fin query para contar los puntos totales
                   error: function(error) {
                     // The request failed
+                    console.log("error counting "+error.message);
                   }
                 });           
         

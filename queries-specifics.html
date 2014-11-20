@@ -29,7 +29,6 @@
 
     var primeraVez;
     //creamos un array
-    var arrayLocations;
     var arrayLocationsFinal;
 
     var colorRandom;
@@ -101,7 +100,6 @@
       function consultarRutas(argument) {
 
         primeraVez=0;
-        arrayLocations = [];
         arrayLocationsFinal = [];
         colorRandom = 0;
     
@@ -146,7 +144,9 @@
               queryCount.count({
                   success: function(countLocations) {
                  // console.log(countLocations);
-                  var bolCalculandoRuta= true;
+                  var bolCalculandoRuta = true;
+                  var arrayLocations = [];
+
                     while(bolCalculandoRuta)
                     {
                       var Locations = Parse.Object.extend("Locations");
@@ -198,7 +198,8 @@
                           if(puntosRecuperados>=max )
                           {
                               //Pintar ruta, calcular distancia en metros y tiempo
-                              preRuta();
+                              preRuta( arrayLocations );
+                               arrayLocations = [];
                           }
 
 
@@ -218,21 +219,24 @@
                     }// Fin WHILE
 
                     //acomodar los puntos
-                        function preRuta () {
-                          console.log("arrayLocations: "+ arrayLocations[0].value);
+                        function preRuta (coordenadasNuevas) {
 
-                          arrayLocations.sort(function(a,b) {
-                              return a.id - b.id;
-                          });
+                          console.log("coordenadasNuevas: "+ coordenadasNuevas.length);
 
-                          console.log("arrayLocations: "+ arrayLocations[0].value);
+                          var coordenadas = [];
 
-                          for (var i = 0; i < arrayLocations.length; i++) {
-                            arrayLocationsFinal.push( arrayLocations[i].value );
-                            if (i >= arrayLocations.length-1) {
+                          coordenadas = coordenadasNuevas.sort(function(a,b) {
+                                            return a.id - b.id;
+                                        });
+
+                          for (var i = 0; i < coordenadas.length; i++) {
+                            arrayLocationsFinal.push( coordenadas[i].value );
+                            if (i >= coordenadas.length-1) {
                               pintarRuta ();
                             }
                           }
+
+                          console.log("coordenadas: "+ coordenadas.length);
                           
                         }
 
@@ -240,14 +244,14 @@
 
                          distance = (distance / 1000);
                           //Marker inicio
-                          addMarker(arrayLocations[0].value,
+                          addMarker(arrayLocationsFinal[0],
                                     startImage,
                                     ruta.get('NombreRuta'),
                                     '<h2>Inicio: '+ruta.get('NombreRuta')+'</h2><p>'+'Distancia recorrida: '+distance.toFixed(2)
                                                   +' km, Velocidad: '+ velocidad(tiempoViajeSegundos,distance) +'</p>');
 
                           //Marker final
-                          addMarker(arrayLocations[countLocations-1].value,
+                          addMarker(arrayLocationsFinal[countLocations-1],
                           endImage,
                           ruta.get('NombreRuta'),
                           '<h2>Fin: '+ruta.get('NombreRuta')+'</h2><p>'+'Tiempo transcurrido: '+ tiempo(tiempoViajeSegundos) +'</p>');
@@ -264,7 +268,6 @@
                           
                           flightPath.setMap(map);
 
-                          arrayLocations = [];
                           arrayLocationsFinal = [];
                           distance = 0.0;
                           tiempoViajeSegundos = 0;
@@ -397,7 +400,7 @@
         <select name="Ruta" id="listaRuta" onchange="changeRuta()">
         </select>
 
-        <img src="images/logout.png" onclick="Logout()" style="position: relative; left: 77%; top: 3px;">
+        <img src="images/logout.png" onclick="Logout()" style="position: relative; left: 70%; top: 3px;">
     </form>
 
       <div id="map_canvas" style="width:100%; height:90%"></div>
