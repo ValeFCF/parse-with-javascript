@@ -17,12 +17,16 @@
         #map_canvas { height: 100% }        
       </style>
 
-  <script type="text/javascript"
+  	<script type="text/javascript"
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnfdE7BKwMrZHgWcCyeDlCOCDzqNfG4mY&libraries=geometry&sensor=FALSE">
         //se puso en false por que no requiere la ubicación
         // se agrego la biblioteca geometry.
       </script>
 
+
+      	<script src="external/jquery/jquery.js"> //jquery for datepicker </script>
+		<script src="jquery-ui.min.js"></script>
+		<link rel='stylesheet' type='text/css' href='http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css'/>
 
 <script type="text/javascript" >
     //https://developer.chrome.com/devtools/docs/javascript-debugging
@@ -59,6 +63,17 @@
     var tiempoViajeSegundosPromedio;
     var distancePromedio;
     var noRutas;
+
+    var dia = 1;
+    var mes = 9;
+    var anio = 2014;
+    var hora = 19;
+    var diaFin = 1;
+    var mesFin = 9;
+    var anioFin = 2014;
+    var horaFin = 19;
+    var elemSelect;
+    var valueSelect;
 
      function initialize () {
       Parse.initialize("mq9CszjDmuCDV96zHWYphRY3eoCXGJw89VebGHWh", "vbBDF3x2r0DLoPGjlBg0aBiLIC5Z3CzOpqIVoH3T");
@@ -107,7 +122,7 @@
     }
 
     //http://ecapy.com/variables-globales-en-javascript/
-    function consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin) {
+    function consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin,anio,anioFin) {
 
       primeraVez = 0;
       arrayLocationsFinal = [];
@@ -137,26 +152,27 @@
       // los ultimos 4 se pueden dejar en blanco
       //new Date(year, month, day, hours, minutes, seconds, milliseconds) 
 
-      if (mes==null || dia==null || hora==null || mesFin==null || diaFin==null || horaFin==null) {
+      if (mes==null || dia==null || hora==null || mesFin==null || diaFin==null || 
+      		horaFin==null || anio==null || anioFin==null) {
         var dateToCompare = new Date(2014,9,8,6); // 5 horas menos para que respete la zona horaria prueba con 11:00
         var dateToCompareFin = new Date(2014,9,8,7); // prueba con 12:00
 
       }else{  
           if ((hora >= 19 && hora <=23) || hora==0){
-            var dateToCompare = new Date(2014,mes,dia-1,hora);
+            var dateToCompare = new Date(anio,mes,dia-1,hora);
           }else{
-            var dateToCompare = new Date(2014,mes,dia,hora);
+            var dateToCompare = new Date(anio,mes,dia,hora);
           }
 
           if ((horaFin >= 19 && horaFin <=23) || horaFin==0){
-            var dateToCompareFin = new Date(2014,mesFin,diaFin-1,horaFin);
+            var dateToCompareFin = new Date(anioFin,mesFin,diaFin-1,horaFin);
           }else{
-            var dateToCompareFin = new Date(2014,mesFin,diaFin,horaFin);
+            var dateToCompareFin = new Date(anioFin,mesFin,diaFin,horaFin);
           }
 
-          /*console.log('mes='+mes+'-dia='+dia+'-hora='+hora);
+          /*console.log('mes='+mes+'-dia='+dia+'-hora='+hora+'-año='+anio);
           console.log("Date UTC = " + (dateToCompare).toUTCString());
-          console.log('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin);
+          console.log('mesFin='+mesFin+'-diaFin='+diaFin+'-horaFin='+horaFin+'-añoFin='+anioFin);
           console.log("DateFin UTC = " + (dateToCompareFin).toUTCString());*/
       }
 
@@ -509,95 +525,93 @@
 
 
     }
-    </script>
 
-    <script>
+    $(function() {
+	    $("#datepicker").datepicker( {
+	        onSelect: function(date) {
+	        	var dateSelec = new Date(date);
+	           	dia = dateSelec.getDate();
+			    mes = dateSelec.getMonth();
+			    anio = dateSelec.getFullYear();
+	        },
+	        //dateFormat: "dd-mm-yy"
+	    });
+	  });
 
-      var mes = 9;
-      var dia = 1;
-      var hora = 20;
-      var mesFin = 9;
-      var diaFin = 1;
-      var horaFin = 20;
-      var elemSelect;
-      var valueSelect;
+	  $(function() {
+	    $( "#datepickerFin" ).datepicker( {
+	    	onSelect: function(date) {
+	    		var dateSelecFin = new Date(date);
+	            diaFin = dateSelecFin.getDate();
+			    mesFin = dateSelecFin.getMonth();
+			    anioFin = dateSelecFin.getFullYear(); 
+	    	}
+	    });
+	  });
 
-      function changeDate (argument, args2) {
+   	function changeDate (argument, args2) {
         
-        elemSelect = document.getElementById(argument);
-        valueSelect = elemSelect.options[elemSelect.selectedIndex].value;
+     	elemSelect = document.getElementById(argument);
+     	valueSelect = elemSelect.options[elemSelect.selectedIndex].value;
 
-        if (args2 == 2 || args2 == 5) {
-          
-          switch (parseInt(valueSelect)) {
-            case 0:
-                  valueSelect = 19;
-                  break;
-              case 1:
-                  valueSelect = 20;
-                  break;
-              case 2:
-                  valueSelect = 21;
-                  break;
-              case 3:
-                  valueSelect = 22;
-                  break;
-              case 4:
-                  valueSelect = 23;
-                  break;
-              case 5:
-                  valueSelect = 0;
-                  break;
-              case 6:
-              case 7:
-              case 8:
-              case 9:
-              case 10:
-              case 11:
-              case 12:
-              case 13:
-              case 14:
-              case 15:
-              case 16:
-              case 17:
-              case 18:
-              case 19:
-              case 20:
-              case 21:
-              case 22:
-              case 23:
-                valueSelect = (valueSelect-5);
-                  break;
-          }
+	    if (args2 == 2 || args2 == 5) {
+	          
+	          switch (parseInt(valueSelect)) {
+	            case 0:
+	                  valueSelect = 18;
+	                  break;
+	              case 1:
+	                  valueSelect = 19;
+	                  break;
+	              case 2:
+	                  valueSelect = 20;
+	                  break;
+	              case 3:
+	                  valueSelect = 21;
+	                  break;
+	              case 4:
+	                  valueSelect = 22;
+	                  break;
+	              case 5:
+	                  valueSelect = 23;
+	                  break;
+	              case 6:
+	              case 7:
+	              case 8:
+	              case 9:
+	              case 10:
+	              case 11:
+	              case 12:
+	              case 13:
+	              case 14:
+	              case 15:
+	              case 16:
+	              case 17:
+	              case 18:
+	              case 19:
+	              case 20:
+	              case 21:
+	              case 22:
+	              case 23:
+	                valueSelect = (valueSelect-6);
+	                  break;
+	          }
 
-        }
+	    }
 
-        switch (args2) {
-            case 0:
-                mes = valueSelect;
-                break;
-            case 1:
-                dia = valueSelect;
-                break;
-            case 2:
-                hora = valueSelect;
-                break;
-            case 3:
-                mesFin = valueSelect;
-                break;
-            case 4:
-                diaFin = valueSelect;
-                break;
-            case 5:
-                horaFin = valueSelect;
-                break;
-          }
+	    switch (args2) {
+	        case 2:
+	            hora = valueSelect;
+	            break;
+	        case 5:
+	            horaFin = valueSelect;
+	            break;
+	      }
+    } 
 
-       } 
-
-       function buscarMapa (argument) {
-        consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin);
-       }
+    function buscarMapa (argument) {
+     consultarRutas(mes,dia,hora,mesFin,diaFin,horaFin,anio,anioFin);
+    }
 
     </script>
     </head>
@@ -607,147 +621,70 @@
   
 <form> 
 
-      <select name="mes" id="mes" onchange="changeDate('mes',0)">
-        <option value="9">Octubre</option>
-        <option value="10">Noviembre</option>
-      </select>
+	<p>Fecha Inicio: <input type="text" id="datepicker" style="width:65px;"> 
 
-      <select name="dia" id="dia" onchange="changeDate('dia',1)">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-        <option value="11">11</option>
-        <option value="12">12</option>
-        <option value="13">13</option>
-        <option value="14">14</option>
-        <option value="15">15</option>
-        <option value="16">16</option>
-        <option value="17">17</option>
-        <option value="18">18</option>
-        <option value="19">19</option>
-        <option value="20">20</option>
-        <option value="21">21</option>
-        <option value="22">22</option>
-        <option value="23">23</option>
-        <option value="24">24</option>
-        <option value="25">25</option>
-        <option value="26">26</option>
-        <option value="27">27</option>
-        <option value="28">28</option>
-        <option value="29">29</option>
-        <option value="30">30</option>
-        <option value="31">31</option>
-      </select>
+		<select name="hora" id="hora" onchange="changeDate('hora',2)">
+	        <option value="1">1 am</option>
+	        <option value="2">2 am</option>
+	        <option value="3">3 am</option>
+	        <option value="4">4 am</option>
+	        <option value="5">5 am</option>
+	        <option value="6">6 am</option>
+	        <option value="7">7 am</option>
+	        <option value="8">8 am</option>
+	        <option value="9">9 am</option>
+	        <option value="10">10 am</option>
+	        <option value="11">11 am</option>
+	        <option value="12">12 pm</option>
+	        <option value="13">1 pm</option>
+	        <option value="14">2 pm</option>
+	        <option value="15">3 pm</option>
+	        <option value="16">4 pm</option>
+	        <option value="17">5 pm</option>
+	        <option value="18">6 pm</option>
+	        <option value="19">7 pm</option>
+	        <option value="20">8 pm</option>
+	        <option value="21">9 pm</option>
+	        <option value="22">10 pm</option>
+	        <option value="23">11 pm</option>
+	        <option value="0">12 am</option>
+     	</select>
 
-      <select name="hora" id="hora" onchange="changeDate('hora',2)">
-        <option value="1">1 am</option>
-        <option value="2">2 am</option>
-        <option value="3">3 am</option>
-        <option value="4">4 am</option>
-        <option value="5">5 am</option>
-        <option value="6">6 am</option>
-        <option value="7">7 am</option>
-        <option value="8">8 am</option>
-        <option value="9">9 am</option>
-        <option value="10">10 am</option>
-        <option value="11">11 am</option>
-        <option value="12">12 pm</option>
-        <option value="13">1 pm</option>
-        <option value="14">2 pm</option>
-        <option value="15">3 pm</option>
-        <option value="16">4 pm</option>
-        <option value="17">5 pm</option>
-        <option value="18">6 pm</option>
-        <option value="19">7 pm</option>
-        <option value="20">8 pm</option>
-        <option value="21">9 pm</option>
-        <option value="22">10 pm</option>
-        <option value="23">11 pm</option>
-        <option value="0">12 am</option>
-      </select>
-  
 
-    </br>
+	  Fecha Final: <input type="text" id="datepickerFin" style="width:65px;">
 
-      <select name="mesFin" id="mesFin" onchange="changeDate('mesFin',3)">
-        <option value="9">Octubre</option>
-        <option value="10">Noviembre</option>
-      </select>
+	  	<select name="horaFin" id="horaFin" onchange="changeDate('horaFin',5)">
+	        <option value="1">1 am</option>
+	        <option value="2">2 am</option>
+	        <option value="3">3 am</option>
+	        <option value="4">4 am</option>
+	        <option value="5">5 am</option>
+	        <option value="6">6 am</option>
+	        <option value="7">7 am</option>
+	        <option value="8">8 am</option>
+	        <option value="9">9 am</option>
+	        <option value="10">10 am</option>
+	        <option value="11">11 am</option>
+	        <option value="12">12 pm</option>
+	        <option value="13">1 pm</option>
+	        <option value="14">2 pm</option>
+	        <option value="15">3 pm</option>
+	        <option value="16">4 pm</option>
+	        <option value="17">5 pm</option>
+	        <option value="18">6 pm</option>
+	        <option value="19">7 pm</option>
+	        <option value="20">8 pm</option>
+	        <option value="21">9 pm</option>
+	        <option value="22">10 pm</option>
+	        <option value="23">11 pm</option>
+	        <option value="0">12 am</option>
+      	</select>
 
-      <select name="diaFin" id="diaFin" onchange="changeDate('diaFin',4)">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-        <option value="11">11</option>
-        <option value="12">12</option>
-        <option value="13">13</option>
-        <option value="14">14</option>
-        <option value="15">15</option>
-        <option value="16">16</option>
-        <option value="17">17</option>
-        <option value="18">18</option>
-        <option value="19">19</option>
-        <option value="20">20</option>
-        <option value="21">21</option>
-        <option value="22">22</option>
-        <option value="23">23</option>
-        <option value="24">24</option>
-        <option value="25">25</option>
-        <option value="26">26</option>
-        <option value="27">27</option>
-        <option value="28">28</option>
-        <option value="29">29</option>
-        <option value="30">30</option>
-        <option value="31">31</option>
-      </select>
+	</p>
 
-      <select name="horaFin" id="horaFin" onchange="changeDate('horaFin',5)">
-        <option value="1">1 am</option>
-        <option value="2">2 am</option>
-        <option value="3">3 am</option>
-        <option value="4">4 am</option>
-        <option value="5">5 am</option>
-        <option value="6">6 am</option>
-        <option value="7">7 am</option>
-        <option value="8">8 am</option>
-        <option value="9">9 am</option>
-        <option value="10">10 am</option>
-        <option value="11">11 am</option>
-        <option value="12">12 pm</option>
-        <option value="13">1 pm</option>
-        <option value="14">2 pm</option>
-        <option value="15">3 pm</option>
-        <option value="16">4 pm</option>
-        <option value="17">5 pm</option>
-        <option value="18">6 pm</option>
-        <option value="19">7 pm</option>
-        <option value="20">8 pm</option>
-        <option value="21">9 pm</option>
-        <option value="22">10 pm</option>
-        <option value="23">11 pm</option>
-        <option value="0">12 am</option>
-      </select>
-
+	<img src="images/buscarMapa.png" onclick="buscarMapa()">
 
     </p>
-
-  
-       <img src="images/buscarMapa.png" onclick="buscarMapa()">
-  
     
   </form>
 
@@ -756,8 +693,6 @@
     <label>Distancia promedio: </label><label id="distancia"></label></br>
     <label>Velocidad promedio: </label><label id="velocidad"></label></br>
     <label>Transporte más usado: </label><label id="transporte"></label></br></br>
-
-  
 
     <div id="map_canvas" style="width:100%; height:95%"></div>
 
